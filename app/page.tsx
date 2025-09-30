@@ -5,9 +5,9 @@ import QuickEntry from '@/components/QuickEntry';
 import Analytics from '@/components/Analytics';
 
 export default function Home() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{name: string} | null>(null);
   const [accounts, setAccounts] = useState([]);
-  const [summary, setSummary] = useState({});
+  const [summary, setSummary] = useState<{total_expense?: number, total_income?: number}>({});
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -69,7 +69,9 @@ export default function Home() {
       // 離線時存入 IndexedDB
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
-        registration.sync.register('background-sync');
+        if ('sync' in registration) {
+          (registration as any).sync.register('background-sync');
+        }
       }
       alert('已離線儲存，將在連線時同步');
     }

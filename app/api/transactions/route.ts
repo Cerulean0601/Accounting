@@ -41,10 +41,9 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
     
-    query += ` ORDER BY t.date DESC, t.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(limit, (page - 1) * limit);
+    query += ` ORDER BY t.date DESC, t.created_at DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
     
-    const result = await db.query(query, params);
+    const result = await db.query`${query}`;
     
     return NextResponse.json(result.rows);
   } catch (error) {
