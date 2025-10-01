@@ -6,11 +6,13 @@ import Analytics from '@/components/Analytics';
 
 export default function Home() {
   const [user, setUser] = useState<{name: string} | null>(null);
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [summary, setSummary] = useState<{total_expense?: number, total_income?: number}>({});
   const [isMobile, setIsMobile] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     // 檢查螢幕尺寸
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -31,17 +33,23 @@ export default function Home() {
       const accountsRes = await fetch('/api/accounts', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const accountsData = await accountsRes.json();
-      setAccounts(accountsData);
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
+      }
 
       // 載入統計資料
       const summaryRes = await fetch('/api/analytics/summary', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const summaryData = await summaryRes.json();
-      setSummary(summaryData);
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        setSummary(summaryData || {});
+      }
     } catch (error) {
       console.error('載入資料失敗:', error);
+      setAccounts([]);
+      setSummary({});
     }
   };
 
@@ -76,6 +84,10 @@ export default function Home() {
       alert('已離線儲存，將在連線時同步');
     }
   };
+
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
 
   if (!user && typeof window !== 'undefined') {
     return (
