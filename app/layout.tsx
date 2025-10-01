@@ -1,3 +1,6 @@
+import 'nes.css/css/nes.min.css'
+import './globals.css'
+
 export default function RootLayout({
   children,
 }: {

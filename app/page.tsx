@@ -13,12 +13,10 @@ export default function Home() {
 
   useEffect(() => {
     setIsClient(true);
-    // 檢查螢幕尺寸
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
-    // 載入用戶資料
     loadUserData();
     
     return () => window.removeEventListener('resize', checkMobile);
@@ -29,7 +27,6 @@ export default function Home() {
     if (!token) return;
 
     try {
-      // 載入帳戶
       const accountsRes = await fetch('/api/accounts', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -38,7 +35,6 @@ export default function Home() {
         setAccounts(Array.isArray(accountsData) ? accountsData : []);
       }
 
-      // 載入統計資料
       const summaryRes = await fetch('/api/analytics/summary', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -67,14 +63,12 @@ export default function Home() {
       });
 
       if (response.ok) {
-        // 重新載入資料
         loadUserData();
         alert('記帳成功！');
       } else {
         alert('記帳失敗');
       }
     } catch (error) {
-      // 離線時存入 IndexedDB
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
         if ('sync' in registration) {
@@ -86,22 +80,21 @@ export default function Home() {
   };
 
   if (!isClient) {
-    return <div>Loading...</div>;
+    return <div className="app-container">Loading...</div>;
   }
 
   if (!user && typeof window !== 'undefined') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h1 className="text-2xl font-bold text-center mb-6">記帳應用</h1>
+      <div className="app-container" style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div className="nes-container with-title is-centered" style={{maxWidth: '400px'}}>
+          <p className="title">記帳應用</p>
           <button
+            className="nes-btn is-primary"
             onClick={() => {
-              // 簡化登入流程，實際應用需要完整的登入表單
               localStorage.setItem('token', 'demo-token');
               setUser({ name: 'Demo User' });
               loadUserData();
             }}
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
           >
             開始使用
           </button>
@@ -111,43 +104,47 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold">記帳應用</h1>
+    <div className="app-container">
+      <div className="nes-container with-title">
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <p className="title">記帳應用</p>
+          <div style={{display: 'flex', gap: '10px'}}>
             <button
+              className="nes-btn is-warning"
+              onClick={() => window.location.href = '/manage'}
+            >
+              管理
+            </button>
+            <button
+              className="nes-btn is-error"
               onClick={() => {
                 localStorage.removeItem('token');
                 setUser(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
             >
               登出
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main>
         {isMobile ? (
-          // 手機版：快速記帳優先
-          <div className="space-y-4">
+          <div>
             <QuickEntry accounts={accounts} onSubmit={handleTransaction} />
             
-            {/* 簡化的統計資訊 */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="font-semibold mb-2">本月概況</h3>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-gray-500">支出</p>
-                  <p className="text-lg font-bold text-red-600">
+            <div className="nes-container with-title">
+              <p className="title">本月概況</p>
+              <div className="stats-grid">
+                <div className="nes-container is-dark">
+                  <p>支出</p>
+                  <p style={{color: '#ff6b6b', fontSize: '18px'}}>
                     ${summary.total_expense?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">收入</p>
-                  <p className="text-lg font-bold text-green-600">
+                <div className="nes-container is-dark">
+                  <p>收入</p>
+                  <p style={{color: '#51cf66', fontSize: '18px'}}>
                     ${summary.total_income?.toLocaleString() || 0}
                   </p>
                 </div>
@@ -155,12 +152,11 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          // 桌面版：完整分析功能
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-4">
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px'}}>
+            <div>
               <QuickEntry accounts={accounts} onSubmit={handleTransaction} />
             </div>
-            <div className="col-span-8">
+            <div>
               <Analytics summary={summary} />
             </div>
           </div>

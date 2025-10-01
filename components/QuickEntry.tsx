@@ -44,7 +44,6 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
       date: new Date().toISOString().split('T')[0]
     });
 
-    // 重置表單
     setAmount('');
     setCategory('');
     setTags([]);
@@ -60,85 +59,93 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-      <h2 className="text-lg font-semibold mb-4">快速記帳</h2>
+    <div className="nes-container with-title">
+      <p className="title">快速記帳</p>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit}>
         {/* 收支類型 */}
-        <div className="flex space-x-2">
+        <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
           <button
             type="button"
             onClick={() => setType('expense')}
-            className={`flex-1 py-2 px-4 rounded ${
-              type === 'expense' ? 'bg-red-500 text-white' : 'bg-gray-200'
-            }`}
+            className={`nes-btn ${type === 'expense' ? 'is-error' : ''}`}
+            style={{flex: 1}}
           >
             支出
           </button>
           <button
             type="button"
             onClick={() => setType('income')}
-            className={`flex-1 py-2 px-4 rounded ${
-              type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-200'
-            }`}
+            className={`nes-btn ${type === 'income' ? 'is-success' : ''}`}
+            style={{flex: 1}}
           >
             收入
           </button>
         </div>
 
         {/* 金額 */}
-        <input
-          type="number"
-          placeholder="金額"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full p-3 border rounded-lg text-lg"
-          step="0.01"
-          required
-        />
+        <div className="nes-field" style={{marginBottom: '20px'}}>
+          <label htmlFor="amount">金額</label>
+          <input
+            type="number"
+            id="amount"
+            className="nes-input"
+            placeholder="輸入金額"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            step="0.01"
+            required
+          />
+        </div>
 
         {/* 帳戶選擇 */}
-        <select
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-          className="w-full p-3 border rounded-lg"
-          required
-        >
-          {accounts.map(account => (
-            <option key={account.account_id} value={account.account_id}>
-              {account.name} (${account.balance})
-            </option>
-          ))}
-        </select>
+        <div className="nes-field" style={{marginBottom: '20px'}}>
+          <label htmlFor="account">帳戶</label>
+          <div className="nes-select">
+            <select
+              id="account"
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+              required
+            >
+              {accounts.map(account => (
+                <option key={account.account_id} value={account.account_id}>
+                  {account.name} (${account.balance})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         {/* 分類 */}
-        <div className="grid grid-cols-3 gap-2">
-          {categories[type].map(cat => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategory(cat)}
-              className={`p-2 rounded text-sm ${
-                category === cat ? 'bg-blue-500 text-white' : 'bg-gray-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div style={{marginBottom: '20px'}}>
+          <label>分類</label>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '10px'}}>
+            {categories[type].map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(cat)}
+                className={`nes-btn ${category === cat ? 'is-primary' : ''}`}
+                style={{fontSize: '12px'}}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 標籤 */}
-        <div>
-          <label className="block text-sm font-medium mb-2">標籤</label>
-          <div className="flex flex-wrap gap-2">
+        <div style={{marginBottom: '20px'}}>
+          <label>標籤</label>
+          <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px'}}>
             {frequentTags.map(tag => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`px-3 py-1 rounded-full text-sm ${
-                  tags.includes(tag) ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
+                className={`nes-btn ${tags.includes(tag) ? 'is-warning' : ''}`}
+                style={{fontSize: '10px', padding: '4px 8px'}}
               >
                 {tag}
               </button>
@@ -147,18 +154,19 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
         </div>
 
         {/* 備註 */}
-        <input
-          type="text"
-          placeholder="備註 (可選)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="w-full p-3 border rounded-lg"
-        />
+        <div className="nes-field" style={{marginBottom: '20px'}}>
+          <label htmlFor="note">備註</label>
+          <input
+            type="text"
+            id="note"
+            className="nes-input"
+            placeholder="備註 (可選)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
-        >
+        <button type="submit" className="nes-btn is-primary" style={{width: '100%'}}>
           記帳
         </button>
       </form>
