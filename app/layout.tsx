@@ -1,5 +1,6 @@
 import 'nes.css/css/nes.min.css'
 import './globals.css'
+import ThemeProvider from '../components/ThemeProvider'
 
 export default function RootLayout({
   children,
@@ -8,7 +9,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   )
 }

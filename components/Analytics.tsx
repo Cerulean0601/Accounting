@@ -72,7 +72,7 @@ export default function Analytics({ summary }: AnalyticsProps) {
   return (
     <div>
       {/* 控制面板 */}
-      <div className="nes-container with-title" style={{marginBottom: '20px'}}>
+      <div className="nes-container" style={{marginBottom: '20px'}}>
         <p className="title">分析控制</p>
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           <div className="nes-select">
@@ -148,7 +148,7 @@ export default function Analytics({ summary }: AnalyticsProps) {
       </div>
 
       {/* 帳戶餘額 */}
-      <div className="nes-container with-title">
+      <div className="nes-container">
         <p className="title">帳戶餘額</p>
         <div style={{display: 'grid', gap: '10px'}}>
           {summary.accounts?.map((account: any) => (
@@ -167,7 +167,7 @@ export default function Analytics({ summary }: AnalyticsProps) {
       </div>
 
       {/* 分類詳細 */}
-      <div className="nes-container with-title">
+      <div className="nes-container">
         <p className="title">分類詳細</p>
         <div className="nes-table-responsive">
           <table className="nes-table is-bordered is-centered">

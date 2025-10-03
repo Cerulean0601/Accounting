@@ -153,7 +153,7 @@ export default function ManagePage() {
 
   return (
     <div className="app-container">
-      <div className="nes-container with-title">
+      <div className="nes-container">
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
           <p className="title">資料管理</p>
           <button
@@ -190,7 +190,7 @@ export default function ManagePage() {
       {/* 分類管理 */}
       {activeTab === 'categories' && (
         <div>
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">{editingCategory ? '編輯' : '新增'}分類</p>
             <form onSubmit={handleCategorySubmit}>
               <div className="nes-field" style={{marginBottom: '15px'}}>
@@ -255,7 +255,7 @@ export default function ManagePage() {
             </form>
           </div>
 
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">分類列表</p>
             {mainCategories.map(category => (
               <div key={category.id} style={{marginBottom: '15px'}}>
@@ -336,7 +336,7 @@ export default function ManagePage() {
       {/* 標籤管理 */}
       {activeTab === 'tags' && (
         <div>
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">{editingTag ? '編輯' : '新增'}標籤</p>
             <form onSubmit={handleTagSubmit}>
               <div className="nes-field" style={{marginBottom: '15px'}}>
@@ -379,7 +379,7 @@ export default function ManagePage() {
             </form>
           </div>
 
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">標籤列表</p>
             <div style={{display: 'grid', gap: '10px'}}>
               {tags.map(tag => (
@@ -425,7 +425,7 @@ export default function ManagePage() {
       {/* 帳戶管理 */}
       {activeTab === 'accounts' && (
         <div>
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">{editingAccount ? '編輯' : '新增'}帳戶</p>
             <form onSubmit={handleAccountSubmit}>
               <div className="nes-field" style={{marginBottom: '15px'}}>
@@ -483,7 +483,7 @@ export default function ManagePage() {
             </form>
           </div>
 
-          <div className="nes-container with-title">
+          <div className="nes-container">
             <p className="title">帳戶列表</p>
             <div style={{display: 'grid', gap: '10px'}}>
               {accounts.map(account => (

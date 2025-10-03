@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import QuickEntry from '@/components/QuickEntry';
-import Analytics from '@/components/Analytics';
+import ThemeButtons from '@/components/ThemeButtons';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Home() {
+  const { theme } = useTheme();
   const [user, setUser] = useState<{name: string} | null>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [summary, setSummary] = useState<{total_expense?: number, total_income?: number}>({});
   const [isMobile, setIsMobile] = useState(false);
   const [isClient, setIsClient] = useState(false);
+
+  const isDark = theme === 'dark' || (theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     setIsClient(true);
@@ -86,7 +90,7 @@ export default function Home() {
   if (!user && typeof window !== 'undefined') {
     return (
       <div className="app-container" style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-        <div className="nes-container with-title is-centered" style={{maxWidth: '400px'}}>
+        <div className={`nes-container is-centered ${isDark ? 'is-dark' : ''}`} style={{maxWidth: '400px'}}>
           <p className="title">記帳應用</p>
           <button
             className="nes-btn is-primary"
@@ -105,44 +109,51 @@ export default function Home() {
 
   return (
     <div className="app-container">
-      <div className="nes-container with-title">
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-          <p className="title">記帳應用</p>
-          <div style={{display: 'flex', gap: '10px'}}>
-            <button
-              className="nes-btn is-warning"
-              onClick={() => window.location.href = '/manage'}
-            >
-              管理
-            </button>
-            <button
-              className="nes-btn is-error"
-              onClick={() => {
-                localStorage.removeItem('token');
-                setUser(null);
-              }}
-            >
-              登出
-            </button>
+      <ThemeButtons />
+      
+      <main>
+        <div className={`nes-container ${isDark ? 'is-dark' : ''}`}>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <p className="title">記帳應用</p>
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button
+                className="nes-btn is-primary"
+                onClick={() => window.location.href = '/analytics'}
+              >
+                分析
+              </button>
+              <button
+                className="nes-btn is-warning"
+                onClick={() => window.location.href = '/manage'}
+              >
+                管理
+              </button>
+              <button
+                className="nes-btn is-error"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setUser(null);
+                }}
+              >
+                登出
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <main>
         {isMobile ? (
           <div>
             <QuickEntry accounts={accounts} onSubmit={handleTransaction} />
             
-            <div className="nes-container with-title">
+            <div className={`nes-container ${isDark ? 'is-dark' : ''}`}>
               <p className="title">本月概況</p>
               <div className="stats-grid">
-                <div className="nes-container is-dark">
+                <div className={`nes-container is-dark`}>
                   <p>支出</p>
                   <p style={{color: '#ff6b6b', fontSize: '18px'}}>
                     ${summary.total_expense?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div className="nes-container is-dark">
+                <div className={`nes-container is-dark`}>
                   <p>收入</p>
                   <p style={{color: '#51cf66', fontSize: '18px'}}>
                     ${summary.total_income?.toLocaleString() || 0}
@@ -152,13 +163,8 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div style={{display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px'}}>
-            <div>
-              <QuickEntry accounts={accounts} onSubmit={handleTransaction} />
-            </div>
-            <div>
-              <Analytics summary={summary} />
-            </div>
+          <div>
+            <QuickEntry accounts={accounts} onSubmit={handleTransaction} />
           </div>
         )}
       </main>

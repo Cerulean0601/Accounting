@@ -59,7 +59,7 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
   };
 
   return (
-    <div className="nes-container with-title">
+    <div className="nes-container">
       <p className="title">快速記帳</p>
       
       <form onSubmit={handleSubmit}>

@@ -1,23 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* 自訂主題類別 */
+.nes-btn.is-purple { background-color: #9c27b0; color: white; }
+.nes-btn.is-teal { background-color: #009688; color: white; }
+.nes-btn.is-orange { background-color: #ff9800; color: white; }
+
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: 'Press Start 2P', cursive;
-  background-color: #212529;
-  color: #fff;
+  background-color: #f8f9fa;
+  color: #212529;
   padding: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] body {
+  background-color: #212529;
+  color: #ffffff;
 }
 
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.nes-container.with-title {
-  margin-bottom: 20px;
 }
 
 .stats-grid {
@@ -28,10 +35,17 @@ body {
 }
 
 .chart-container {
-  background: #fff;
+  background: #ffffff;
+  color: #212529;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .chart-container {
+  background: #343a40;
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {
