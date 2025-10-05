@@ -11,10 +11,6 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year') || new Date().getFullYear();
   
   try {
-    const cacheKey = `analytics:${user.userId}:${year}-${month}`;
-    const cached = await db.cache.get(cacheKey);
-    if (cached) return NextResponse.json(cached);
-    
     // 本月總支出
     const expenseResult = await db.query`
       SELECT COALESCE(SUM(amount), 0) as total_expense
@@ -59,15 +55,21 @@ export async function GET(request: NextRequest) {
       total_expense: parseFloat(expenseResult.rows[0].total_expense),
       total_income: parseFloat(incomeResult.rows[0].total_income),
       net_income: parseFloat(incomeResult.rows[0].total_income) - parseFloat(expenseResult.rows[0].total_expense),
-      categories: categoryResult.rows,
-      accounts: accountResult.rows
+      categories: categoryResult.rows.map(row => ({
+        category: row.category,
+        amount: parseFloat(row.amount),
+        count: parseInt(row.count)
+      })),
+      accounts: accountResult.rows.map(row => ({
+        name: row.name,
+        balance: parseFloat(row.balance),
+        type: row.type
+      }))
     };
-    
-    // 快取 1 小時
-    await db.cache.set(cacheKey, summary, { ex: 3600 });
     
     return NextResponse.json(summary);
   } catch (error) {
+    console.error('GET /api/analytics/summary - 錯誤:', error);
     return NextResponse.json({ error: '取得統計失敗' }, { status: 500 });
   }
 }

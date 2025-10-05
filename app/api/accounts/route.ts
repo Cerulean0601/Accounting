@@ -7,22 +7,16 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '未授權' }, { status: 401 });
   
   try {
-    // 檢查快取
-    const cached = await db.cache.get(`accounts:${user.userId}`);
-    if (cached) return NextResponse.json(cached);
-    
     const result = await db.query`
-      SELECT account_id, name, type, balance, currency, color, is_active
+      SELECT account_id, name, type, initial_balance, current_balance, currency, is_default
       FROM accounts 
-      WHERE user_id = ${user.userId} AND is_active = true
-      ORDER BY name
+      WHERE user_id = ${user.userId}
+      ORDER BY is_default DESC, name
     `;
-    
-    // 快取結果
-    await db.cache.set(`accounts:${user.userId}`, result.rows, { ex: 24 * 3600 });
     
     return NextResponse.json(result.rows);
   } catch (error) {
+    console.error('GET /api/accounts - 錯誤:', error);
     return NextResponse.json({ error: '取得帳戶失敗' }, { status: 500 });
   }
 }
@@ -32,19 +26,17 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '未授權' }, { status: 401 });
   
   try {
-    const { name, type, currency = 'TWD', color } = await request.json();
+    const { name, type, initial_balance = 0, currency = 'TWD', is_default = false } = await request.json();
     
     const result = await db.query`
-      INSERT INTO accounts (user_id, name, type, currency, color)
-      VALUES (${user.userId}, ${name}, ${type}, ${currency}, ${color})
-      RETURNING account_id, name, type, balance, currency, color
+      INSERT INTO accounts (account_id, user_id, name, type, initial_balance, current_balance, currency, is_default)
+      VALUES (gen_random_uuid(), ${user.userId}, ${name}, ${type}, ${initial_balance}, ${initial_balance}, ${currency}, ${is_default})
+      RETURNING account_id, name, type, initial_balance, current_balance, currency, is_default
     `;
-    
-    // 清除快取
-    await db.cache.del(`accounts:${user.userId}`);
     
     return NextResponse.json(result.rows[0]);
   } catch (error) {
+    console.error('POST /api/accounts - 錯誤:', error);
     return NextResponse.json({ error: '新增帳戶失敗' }, { status: 500 });
   }
 }

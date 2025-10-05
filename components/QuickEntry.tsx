@@ -1,7 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Account } from '@/lib/db';
+
+interface Account {
+  account_id: string;
+  name: string;
+  type: string;
+  current_balance: number;
+  currency: string;
+  is_default: boolean;
+}
+
+interface Subcategory {
+  subcategory_id: string;
+  name: string;
+}
+
+interface Category {
+  category_id: string;
+  name: string;
+  color: string;
+  subcategories: Subcategory[];
+}
 
 interface QuickEntryProps {
   accounts: Account[];
@@ -12,50 +32,52 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [category, setCategory] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [subcategoryId, setSubcategoryId] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [note, setNote] = useState('');
-
-  const categories = {
-    expense: ['餐飲', '交通', '購物', '娛樂', '醫療', '其他'],
-    income: ['薪資', '獎金', '投資', '其他']
-  };
-
-  const frequentTags = ['旅遊', '出差', '健身', '聚餐', '加油'];
 
   useEffect(() => {
     if (accounts.length > 0 && !accountId) {
-      const defaultAccount = accounts.find(acc => acc.type === 'cash') || accounts[0];
+      const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0];
       setAccountId(defaultAccount.account_id);
     }
   }, [accounts, accountId]);
 
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('/api/categories', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('載入分類失敗:', error);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !accountId || !category) return;
+    if (!amount || !accountId || !subcategoryId) return;
 
     onSubmit({
       account_id: accountId,
+      subcategory_id: subcategoryId,
       amount: parseFloat(amount),
       type,
-      category,
-      tags,
       note,
       date: new Date().toISOString().split('T')[0]
     });
 
     setAmount('');
-    setCategory('');
-    setTags([]);
+    setSubcategoryId('');
     setNote('');
-  };
-
-  const toggleTag = (tag: string) => {
-    setTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
   };
 
   return (
@@ -110,46 +132,34 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
             >
               {accounts.map(account => (
                 <option key={account.account_id} value={account.account_id}>
-                  {account.name} (${account.balance})
+                  {account.name} (${account.current_balance.toLocaleString()})
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* 分類 */}
-        <div style={{marginBottom: '20px'}}>
-          <label>分類</label>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '10px'}}>
-            {categories[type].map(cat => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategory(cat)}
-                className={`nes-btn ${category === cat ? 'is-primary' : ''}`}
-                style={{fontSize: '12px'}}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 標籤 */}
-        <div style={{marginBottom: '20px'}}>
-          <label>標籤</label>
-          <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px'}}>
-            {frequentTags.map(tag => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleTag(tag)}
-                className={`nes-btn ${tags.includes(tag) ? 'is-warning' : ''}`}
-                style={{fontSize: '10px', padding: '4px 8px'}}
-              >
-                {tag}
-              </button>
-            ))}
+        {/* 分類選擇 */}
+        <div className="nes-field" style={{marginBottom: '20px'}}>
+          <label htmlFor="subcategory">分類</label>
+          <div className="nes-select">
+            <select
+              id="subcategory"
+              value={subcategoryId}
+              onChange={(e) => setSubcategoryId(e.target.value)}
+              required
+            >
+              <option value="">選擇分類</option>
+              {categories.map(category => (
+                <optgroup key={category.category_id} label={category.name}>
+                  {category.subcategories.map(sub => (
+                    <option key={sub.subcategory_id} value={sub.subcategory_id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
         </div>
 

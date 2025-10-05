@@ -92,16 +92,41 @@ export default function Home() {
       <div className="app-container" style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
         <div className={`nes-container is-centered ${isDark ? 'is-dark' : ''}`} style={{maxWidth: '400px'}}>
           <p className="title">記帳應用</p>
-          <button
-            className="nes-btn is-primary"
-            onClick={() => {
-              localStorage.setItem('token', 'demo-token');
-              setUser({ name: 'Demo User' });
-              loadUserData();
-            }}
-          >
-            開始使用
-          </button>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target as HTMLFormElement);
+            const email = formData.get('email') as string;
+            const password = formData.get('password') as string;
+            
+            try {
+              const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              
+              if (response.ok) {
+                const { token, user: userData } = await response.json();
+                localStorage.setItem('token', token);
+                setUser(userData);
+                loadUserData();
+              } else {
+                alert('登入失敗');
+              }
+            } catch (error) {
+              alert('登入錯誤');
+            }
+          }}>
+            <div className="nes-field">
+              <label htmlFor="email">帳號:</label>
+              <input type="email" name="email" className="nes-input" defaultValue="admin@test.com" required />
+            </div>
+            <div className="nes-field">
+              <label htmlFor="password">密碼:</label>
+              <input type="password" name="password" className="nes-input" defaultValue="123456" required />
+            </div>
+            <button type="submit" className="nes-btn is-primary">登入</button>
+          </form>
         </div>
       </div>
     );
