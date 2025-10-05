@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import QuickEntry from '@/components/QuickEntry';
-import ThemeButtons from '@/components/ThemeButtons';
 import { useTheme } from '@/components/ThemeProvider';
 
 export default function Home() {
@@ -20,6 +19,12 @@ export default function Home() {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // 檢查是否有 token，有的話設定用戶狀態
+    const token = localStorage.getItem('token');
+    if (token) {
+      setUser({ name: 'User' }); // 設定基本用戶狀態
+    }
     
     loadUserData();
     
@@ -134,8 +139,6 @@ export default function Home() {
 
   return (
     <div className="app-container">
-      <ThemeButtons />
-      
       <main>
         <div className={`nes-container ${isDark ? 'is-dark' : ''}`}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -152,6 +155,22 @@ export default function Home() {
                 onClick={() => window.location.href = '/manage'}
               >
                 管理
+              </button>
+              <button
+                className={`nes-btn ${isDark ? 'is-primary' : 'is-dark'}`}
+                onClick={() => {
+                  if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                  } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                  }
+                  window.location.reload();
+                }}
+                title={isDark ? '切換為亮色主題' : '切換為暗色主題'}
+              >
+                {isDark ? '☀️' : '🌙'}
               </button>
               <button
                 className="nes-btn is-error"

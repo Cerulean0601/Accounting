@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Analytics from '@/components/Analytics';
-import ThemeButtons from '@/components/ThemeButtons';
 import { useTheme } from '@/components/ThemeProvider';
 
 export default function AnalyticsPage() {
@@ -35,21 +34,27 @@ export default function AnalyticsPage() {
     }
   };
 
+  const handleBack = () => {
+    // 確保返回首頁時有正確的狀態
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/');
+      window.location.reload();
+    }
+  };
+
   if (!isClient) {
     return <div className="app-container">Loading...</div>;
   }
 
   return (
     <div className="app-container">
-      <ThemeButtons />
-      
       <main>
         <div className={`nes-container ${isDark ? 'is-dark' : ''}`}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
             <p className="title">分析</p>
             <button
               className="nes-btn is-primary"
-              onClick={() => window.location.href = '/'}
+              onClick={handleBack}
             >
               返回
             </button>
