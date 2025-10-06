@@ -8,6 +8,7 @@ interface Category {
   type: 'income' | 'expense';
   parent_id?: string;
   children?: Category[];
+  color?: string;
 }
 
 interface Tag {
@@ -53,51 +54,161 @@ export default function ManagePage() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    // 模擬數據
-    setCategories([
-      { id: '1', name: '餐飲', type: 'expense' },
-      { id: '2', name: '早餐', type: 'expense', parent_id: '1' },
-      { id: '3', name: '午餐', type: 'expense', parent_id: '1' },
-      { id: '4', name: '交通', type: 'expense' },
-      { id: '5', name: '薪資', type: 'income' }
-    ]);
-    
+  const loadData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      // 載入真實帳戶資料
+      const accountsRes = await fetch('/api/accounts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        setAccounts(accountsData.map((acc: any) => ({
+          id: acc.account_id,
+          name: acc.name,
+          type: acc.type,
+          balance: acc.current_balance
+        })));
+      }
+
+      // 載入真實分類資料
+      const categoriesRes = await fetch('/api/categories', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (categoriesRes.ok) {
+        const categoriesData = await categoriesRes.json();
+        const flatCategories: Category[] = [];
+        
+        categoriesData.forEach((cat: any) => {
+          // 主分類
+          flatCategories.push({
+            id: cat.category_id, // 使用真實的 UUID
+            name: cat.name,
+            type: 'expense',
+            color: cat.color
+          });
+          
+          // 子分類
+          if (cat.subcategories && cat.subcategories.length > 0) {
+            cat.subcategories.forEach((sub: any) => {
+              if (sub.subcategory_id) { // 確保有有效的 ID
+                flatCategories.push({
+                  id: sub.subcategory_id, // 使用真實的 UUID
+                  name: sub.name,
+                  type: 'expense',
+                  parent_id: cat.category_id
+                });
+              }
+            });
+          }
+        });
+        
+        console.log('載入的分類資料:', flatCategories); // Debug log
+        setCategories(flatCategories);
+      }
+    } catch (error) {
+      console.error('載入資料失敗:', error);
+    }
+
+    // 模擬標籤資料
     setTags([
       { id: '1', name: '旅遊', color: '#ff6b6b' },
       { id: '2', name: '出差', color: '#51cf66' },
       { id: '3', name: '健身', color: '#339af0' }
     ]);
-    
-    setAccounts([
-      { id: '1', name: '現金', type: 'cash', balance: 5000 },
-      { id: '2', name: '銀行帳戶', type: 'bank', balance: 50000 },
-      { id: '3', name: '信用卡', type: 'credit', balance: -2000 }
-    ]);
   };
 
   // 分類 CRUD
-  const handleCategorySubmit = (e: React.FormEvent) => {
+  const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingCategory) {
-      setCategories(prev => prev.map(cat => 
-        cat.id === editingCategory 
-          ? { ...cat, ...categoryForm }
-          : cat
-      ));
-      setEditingCategory(null);
-    } else {
-      const newCategory: Category = {
-        id: Date.now().toString(),
-        ...categoryForm
-      };
-      setCategories(prev => [...prev, newCategory]);
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      if (editingCategory) {
+        // 更新分類 (需要新增 PUT API)
+        alert('編輯功能尚未實作');
+      } else {
+        if (categoryForm.parent_id) {
+          // 新增子分類
+          const response = await fetch('/api/subcategories', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              category_id: categoryForm.parent_id,
+              name: categoryForm.name
+            })
+          });
+
+          if (response.ok) {
+            loadData();
+            setCategoryForm({ name: '', type: 'expense', parent_id: '' });
+            alert('子分類新增成功！');
+          } else {
+            alert('子分類新增失敗');
+          }
+        } else {
+          // 新增主分類
+          const response = await fetch('/api/categories', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name: categoryForm.name,
+              color: '#ff6b6b' // 預設顏色
+            })
+          });
+
+          if (response.ok) {
+            loadData();
+            setCategoryForm({ name: '', type: 'expense', parent_id: '' });
+            alert('分類新增成功！');
+          } else {
+            alert('分類新增失敗');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('分類操作失敗:', error);
+      alert('操作失敗');
     }
-    setCategoryForm({ name: '', type: 'expense', parent_id: '' });
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(cat => cat.id !== id && cat.parent_id !== id));
+  const deleteCategory = async (id: string) => {
+    if (!confirm('確定要刪除此分類嗎？')) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const category = categories.find(cat => cat.id === id);
+      const isSubcategory = category?.parent_id;
+      
+      const endpoint = isSubcategory ? `/api/subcategories/${id}` : `/api/categories/${id}`;
+      
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        loadData(); // 重新載入資料
+        alert('刪除成功！');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || '刪除失敗');
+      }
+    } catch (error) {
+      console.error('刪除分類失敗:', error);
+      alert('刪除失敗');
+    }
   };
 
   // 標籤 CRUD
@@ -125,27 +236,86 @@ export default function ManagePage() {
   };
 
   // 帳戶 CRUD
-  const handleAccountSubmit = (e: React.FormEvent) => {
+  const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingAccount) {
-      setAccounts(prev => prev.map(acc => 
-        acc.id === editingAccount 
-          ? { ...acc, ...accountForm }
-          : acc
-      ));
-      setEditingAccount(null);
-    } else {
-      const newAccount: Account = {
-        id: Date.now().toString(),
-        ...accountForm
-      };
-      setAccounts(prev => [...prev, newAccount]);
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      if (editingAccount) {
+        // 更新帳戶 (需要新增 PUT API)
+        const response = await fetch(`/api/accounts/${editingAccount}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: accountForm.name,
+            type: accountForm.type,
+            current_balance: accountForm.balance
+          })
+        });
+
+        if (response.ok) {
+          loadData(); // 重新載入資料
+          setEditingAccount(null);
+          setAccountForm({ name: '', type: 'cash', balance: 0 });
+          alert('帳戶更新成功！');
+        } else {
+          alert('帳戶更新失敗');
+        }
+      } else {
+        // 新增帳戶
+        const response = await fetch('/api/accounts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: accountForm.name,
+            type: accountForm.type,
+            initial_balance: accountForm.balance
+          })
+        });
+
+        if (response.ok) {
+          loadData(); // 重新載入資料
+          setAccountForm({ name: '', type: 'cash', balance: 0 });
+          alert('帳戶新增成功！');
+        } else {
+          alert('帳戶新增失敗');
+        }
+      }
+    } catch (error) {
+      console.error('帳戶操作失敗:', error);
+      alert('操作失敗');
     }
-    setAccountForm({ name: '', type: 'cash', balance: 0 });
   };
 
-  const deleteAccount = (id: string) => {
-    setAccounts(prev => prev.filter(acc => acc.id !== id));
+  const deleteAccount = async (id: string) => {
+    if (!confirm('確定要刪除此帳戶嗎？')) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`/api/accounts/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        loadData(); // 重新載入資料
+        alert('帳戶刪除成功！');
+      } else {
+        alert('帳戶刪除失敗');
+      }
+    } catch (error) {
+      console.error('刪除帳戶失敗:', error);
+      alert('刪除失敗');
+    }
   };
 
   const mainCategories = categories.filter(cat => !cat.parent_id);

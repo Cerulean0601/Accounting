@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* 修正 NES.CSS is-dark 按鈕樣式 */
+.nes-btn.is-dark {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+  border-color: #212529 !important;
+}
+
 /* 自訂主題類別 */
 .nes-btn.is-purple { background-color: #9c27b0; color: white; }
 .nes-btn.is-teal { background-color: #009688; color: white; }

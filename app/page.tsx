@@ -128,7 +128,7 @@ export default function Home() {
             </div>
             <div className="nes-field">
               <label htmlFor="password">密碼:</label>
-              <input type="password" name="password" className="nes-input" defaultValue="123456" required />
+              <input type="password" name="password" className="nes-input" required />
             </div>
             <button type="submit" className="nes-btn is-primary">登入</button>
           </form>

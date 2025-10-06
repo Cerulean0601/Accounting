@@ -20,7 +20,7 @@ export default function ThemeButtons() {
     onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}
     >
       <button 
-        className="nes-btn is-primary" 
+        className="nes-btn" 
         onClick={setLightTheme}
         style={{ fontSize: '12px', padding: '4px 8px', minHeight: 'auto' }}
         title="亮色主題"
