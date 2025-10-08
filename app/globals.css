@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+@font-face {
+  font-family: 'Fusion Pixel';
+  src: url('/fonts/fusion-pixel-10px-monospaced-zh_hans.otf') format('opentype');
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* 修正 NES.CSS is-dark 按鈕樣式 */
 .nes-btn.is-dark {
   background-color: #212529 !important;
@@ -16,8 +24,12 @@
   box-sizing: border-box;
 }
 
+body, code, html, kbd, pre, samp {
+  font-family: var(--font-fusion-pixel), 'Press Start 2P', cursive !important;
+}
+
 body {
-  font-family: 'Press Start 2P', cursive;
+  font-family: var(--font-fusion-pixel), 'Press Start 2P', cursive;
   background-color: #f8f9fa;
   color: #212529;
   padding: 20px;
@@ -48,6 +60,23 @@ body {
   border-radius: 8px;
   margin-bottom: 20px;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .nes-container {
+  background-color: #343a40 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .nes-table {
+  background-color: #343a40 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .nes-table th,
+[data-theme="dark"] .nes-table td {
+  background-color: #343a40 !important;
+  color: #ffffff !important;
+  border-color: #6c757d !important;
 }
 
 [data-theme="dark"] .chart-container {
