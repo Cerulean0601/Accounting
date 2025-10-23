@@ -22,6 +22,8 @@ interface Account {
   name: string;
   type: 'cash' | 'bank' | 'credit';
   balance: number;
+  initial_balance: number;
+  current_balance: number;
 }
 
 export default function ManagePage() {
@@ -46,7 +48,7 @@ export default function ManagePage() {
   const [accountForm, setAccountForm] = useState({
     name: '',
     type: 'cash' as 'cash' | 'bank' | 'credit',
-    balance: 0
+    initial_balance: 0
   });
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
 
@@ -69,7 +71,8 @@ export default function ManagePage() {
           id: acc.account_id,
           name: acc.name,
           type: acc.type,
-          balance: acc.current_balance
+          initial_balance: acc.initial_balance,
+          current_balance: acc.current_balance
         })));
       }
 
@@ -253,14 +256,14 @@ export default function ManagePage() {
           body: JSON.stringify({
             name: accountForm.name,
             type: accountForm.type,
-            current_balance: accountForm.balance
+            current_balance: accountForm.initial_balance
           })
         });
 
         if (response.ok) {
           loadData(); // 重新載入資料
           setEditingAccount(null);
-          setAccountForm({ name: '', type: 'cash', balance: 0 });
+          setAccountForm({ name: '', type: 'cash', initial_balance: 0 });
           alert('帳戶更新成功！');
         } else {
           alert('帳戶更新失敗');
@@ -276,13 +279,13 @@ export default function ManagePage() {
           body: JSON.stringify({
             name: accountForm.name,
             type: accountForm.type,
-            initial_balance: accountForm.balance
+            initial_balance: accountForm.initial_balance
           })
         });
 
         if (response.ok) {
           loadData(); // 重新載入資料
-          setAccountForm({ name: '', type: 'cash', balance: 0 });
+          setAccountForm({ name: '', type: 'cash', initial_balance: 0 });
           alert('帳戶新增成功！');
         } else {
           alert('帳戶新增失敗');
@@ -623,12 +626,12 @@ export default function ManagePage() {
               </div>
 
               <div className="nes-field" style={{marginBottom: '15px'}}>
-                <label>餘額</label>
+                <label>初始金額</label>
                 <input
                   type="number"
                   className="nes-input"
-                  value={accountForm.balance}
-                  onChange={(e) => setAccountForm({...accountForm, balance: parseFloat(e.target.value)})}
+                  value={accountForm.initial_balance}
+                  onChange={(e) => setAccountForm({...accountForm, initial_balance: parseFloat(e.target.value)})}
                   step="0.01"
                 />
               </div>
@@ -643,7 +646,7 @@ export default function ManagePage() {
                     className="nes-btn"
                     onClick={() => {
                       setEditingAccount(null);
-                      setAccountForm({ name: '', type: 'cash', balance: 0 });
+                      setAccountForm({ name: '', type: 'cash', initial_balance: 0 });
                     }}
                   >
                     取消
@@ -669,9 +672,14 @@ export default function ManagePage() {
                     }`}></i>
                     {account.name} ({account.type})
                   </span>
-                  <span style={{color: account.balance >= 0 ? '#51cf66' : '#ff6b6b'}}>
-                    ${account.balance.toLocaleString()}
-                  </span>
+                  <div style={{textAlign: 'right'}}>
+                    <div style={{fontSize: '12px', color: '#999'}}>
+                      初始: ${account.initial_balance.toLocaleString()}
+                    </div>
+                    <div>
+                      當前: ${account.current_balance.toLocaleString()}
+                    </div>
+                  </div>
                   <div>
                     <button
                       className="nes-btn is-warning"
@@ -680,7 +688,7 @@ export default function ManagePage() {
                         setAccountForm({
                           name: account.name,
                           type: account.type,
-                          balance: account.balance
+                          initial_balance: account.initial_balance
                         });
                         setEditingAccount(account.id);
                       }}

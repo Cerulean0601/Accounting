@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import QuickEntry from '@/components/QuickEntry';
+import InstallPrompt from '@/components/InstallPrompt';
+import OfflineIndicator from '@/components/OfflineIndicator';
 import { useTheme } from '@/components/ThemeProvider';
 
 export default function Home() {
@@ -78,6 +80,7 @@ export default function Home() {
         alert('記帳失敗');
       }
     } catch (error) {
+      // 離線時觸發背景同步
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
         if ('sync' in registration) {
@@ -133,6 +136,8 @@ export default function Home() {
             <button type="submit" className="nes-btn is-primary">登入</button>
           </form>
         </div>
+        <InstallPrompt />
+        <OfflineIndicator />
       </div>
     );
   }
@@ -212,6 +217,10 @@ export default function Home() {
           </div>
         )}
       </main>
+      
+      {/* PWA 組件 */}
+      <InstallPrompt />
+      <OfflineIndicator />
     </div>
   );
 }
