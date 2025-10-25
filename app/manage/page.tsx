@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Category {
   id: string;
@@ -27,6 +28,7 @@ interface Account {
 }
 
 export default function ManagePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'categories' | 'tags' | 'accounts'>('categories');
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -331,7 +333,7 @@ export default function ManagePage() {
           <p className="title">資料管理</p>
           <button
             className="nes-btn"
-            onClick={() => window.location.href = '/'}
+            onClick={() => router.push('/')}
           >
             返回主頁
           </button>

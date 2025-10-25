@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import QuickEntry from '@/components/QuickEntry';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import { useTheme } from '@/components/ThemeProvider';
 
 export default function Home() {
+  const router = useRouter();
   const { theme } = useTheme();
   const [user, setUser] = useState<{name: string} | null>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -151,13 +153,13 @@ export default function Home() {
             <div style={{display: 'flex', gap: '10px'}}>
               <button
                 className="nes-btn is-primary"
-                onClick={() => window.location.href = '/analytics'}
+                onClick={() => router.push('/analytics')}
               >
                 分析
               </button>
               <button
                 className="nes-btn is-warning"
-                onClick={() => window.location.href = '/manage'}
+                onClick={() => router.push('/manage')}
               >
                 管理
               </button>
