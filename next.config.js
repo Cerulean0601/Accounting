@@ -28,11 +28,6 @@ const nextConfig = {
     ]
   },
   
-  // 優化打包 - 暫時關閉
-  // experimental: {
-  //   optimizeCss: true,
-  // },
-  
   // 壓縮
   compress: true,
   

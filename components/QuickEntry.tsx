@@ -35,6 +35,11 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
   const [subcategoryId, setSubcategoryId] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [note, setNote] = useState('');
+  const [date, setDate] = useState(() => {
+    // 預設為當日日期，格式為 YYYY-MM-DD
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   useEffect(() => {
     if (accounts.length > 0 && !accountId) {
@@ -64,7 +69,7 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !accountId || !subcategoryId) return;
+    if (!amount || !accountId || !subcategoryId || !date) return;
 
     onSubmit({
       account_id: accountId,
@@ -72,12 +77,13 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
       amount: parseFloat(amount),
       type,
       note,
-      date: new Date().toISOString().split('T')[0]
+      date
     });
 
     setAmount('');
     setSubcategoryId('');
     setNote('');
+    // 保持日期不重置，方便連續記帳
   };
 
   return (
@@ -103,6 +109,19 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
           >
             收入
           </button>
+        </div>
+
+        {/* 日期選擇 */}
+        <div className="nes-field" style={{marginBottom: '20px'}}>
+          <label htmlFor="date">日期</label>
+          <input
+            type="date"
+            id="date"
+            className="nes-input"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
         </div>
 
         {/* 金額 */}
