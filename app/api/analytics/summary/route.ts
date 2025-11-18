@@ -13,22 +13,26 @@ export async function GET(request: NextRequest) {
   try {
     // 本月總支出
     const expenseResult = await db.query`
-      SELECT COALESCE(SUM(amount), 0) as total_expense
-      FROM transactions 
-      WHERE user_id = ${user.userId} 
-        AND type = 'expense'
-        AND EXTRACT(MONTH FROM date) = ${month}
-        AND EXTRACT(YEAR FROM date) = ${year}
+      SELECT COALESCE(SUM(t.amount), 0) as total_expense
+      FROM transactions t
+      LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE t.user_id = ${user.userId} 
+        AND c.type = 'expense'
+        AND EXTRACT(MONTH FROM t.date) = ${month}
+        AND EXTRACT(YEAR FROM t.date) = ${year}
     `;
     
     // 本月總收入
     const incomeResult = await db.query`
-      SELECT COALESCE(SUM(amount), 0) as total_income
-      FROM transactions 
-      WHERE user_id = ${user.userId} 
-        AND type = 'income'
-        AND EXTRACT(MONTH FROM date) = ${month}
-        AND EXTRACT(YEAR FROM date) = ${year}
+      SELECT COALESCE(SUM(t.amount), 0) as total_income
+      FROM transactions t
+      LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE t.user_id = ${user.userId} 
+        AND c.type = 'income'
+        AND EXTRACT(MONTH FROM t.date) = ${month}
+        AND EXTRACT(YEAR FROM t.date) = ${year}
     `;
     
     // 分類統計
@@ -38,7 +42,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
       LEFT JOIN categories c ON s.category_id = c.category_id
       WHERE t.user_id = ${user.userId} 
-        AND t.type = 'expense'
+        AND c.type = 'expense'
         AND EXTRACT(MONTH FROM t.date) = ${month}
         AND EXTRACT(YEAR FROM t.date) = ${year}
       GROUP BY c.name

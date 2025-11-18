@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
   
   try {
     const result = await db.query`
-      SELECT t.transaction_id, t.amount, t.type, t.note, t.date, 
+      SELECT t.transaction_id, t.amount, t.note, t.date, 
              a.name as account_name, a.account_id,
-             c.name as category_name, s.name as subcategory_name
+             c.name as category_name, c.type, s.name as subcategory_name
       FROM transactions t
       JOIN accounts a ON t.account_id = a.account_id
       LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { account_id, subcategory_id, amount, type, note, date } = body;
+    const { account_id, subcategory_id, amount, note, date } = body;
     
-    if (!account_id || !amount || !type) {
+    if (!account_id || !amount || !subcategory_id) {
       logger.warn('缺少必要欄位', { ...context, userId: user.userId, params: body });
       return NextResponse.json({ error: '缺少必要欄位' }, { status: 400 });
     }
@@ -58,15 +58,30 @@ export async function POST(request: NextRequest) {
     
     await db.query`BEGIN`;
     
+    // 取得分類類型
+    const categoryResult = await db.query`
+      SELECT c.type 
+      FROM categories c
+      JOIN subcategories s ON c.category_id = s.category_id
+      WHERE s.subcategory_id = ${subcategory_id}
+    `;
+    
+    if (categoryResult.rows.length === 0) {
+      await db.query`ROLLBACK`;
+      return NextResponse.json({ error: '無效的子分類' }, { status: 400 });
+    }
+    
+    const categoryType = categoryResult.rows[0].type;
+    
     // 新增交易記錄
     const transactionResult = await db.query`
-      INSERT INTO transactions (transaction_id, user_id, account_id, subcategory_id, amount, type, note, date)
-      VALUES (gen_random_uuid(), ${user.userId}, ${account_id}, ${subcategory_id}, ${amount}, ${type}, ${note}, ${date || new Date().toISOString().split('T')[0]})
-      RETURNING transaction_id, amount, type, note, date
+      INSERT INTO transactions (transaction_id, user_id, account_id, subcategory_id, amount, note, date)
+      VALUES (gen_random_uuid(), ${user.userId}, ${account_id}, ${subcategory_id}, ${amount}, ${note}, ${date || new Date().toISOString().split('T')[0]})
+      RETURNING transaction_id, amount, note, date
     `;
     
     // 更新帳戶餘額
-    const balanceChange = type === 'expense' ? -amount : amount;
+    const balanceChange = categoryType === 'expense' ? -amount : amount;
     await db.query`
       UPDATE accounts 
       SET current_balance = current_balance + ${balanceChange}

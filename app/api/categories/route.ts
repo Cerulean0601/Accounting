@@ -17,12 +17,16 @@ export async function GET(request: NextRequest) {
   try {
     const result = await db.query`
       SELECT c.category_id, c.name, c.color,
-             json_agg(
-               json_build_object(
-                 'subcategory_id', s.subcategory_id,
-                 'name', s.name
-               ) ORDER BY s.name
-             ) FILTER (WHERE s.subcategory_id IS NOT NULL) as subcategories
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'subcategory_id', s.subcategory_id,
+                   'name', s.name,
+                   'sort_order', COALESCE(s.sort_order, 999)
+                 ) ORDER BY COALESCE(s.sort_order, 999), s.name
+               ) FILTER (WHERE s.subcategory_id IS NOT NULL),
+               '[]'::json
+             ) as subcategories
       FROM categories c
       LEFT JOIN subcategories s ON c.category_id = s.category_id
       WHERE c.user_id = ${user.userId}

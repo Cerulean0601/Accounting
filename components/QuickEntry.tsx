@@ -20,6 +20,7 @@ interface Category {
   category_id: string;
   name: string;
   color: string;
+  type: string;
   subcategories: Subcategory[];
 }
 
@@ -75,7 +76,6 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
       account_id: accountId,
       subcategory_id: subcategoryId,
       amount: parseFloat(amount),
-      type,
       note,
       date
     });
@@ -95,7 +95,10 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
         <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
           <button
             type="button"
-            onClick={() => setType('expense')}
+            onClick={() => {
+              setType('expense');
+              setSubcategoryId(''); // 重置子分類選擇
+            }}
             className={`nes-btn ${type === 'expense' ? 'is-error' : ''}`}
             style={{flex: 1}}
           >
@@ -103,7 +106,10 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
           </button>
           <button
             type="button"
-            onClick={() => setType('income')}
+            onClick={() => {
+              setType('income');
+              setSubcategoryId(''); // 重置子分類選擇
+            }}
             className={`nes-btn ${type === 'income' ? 'is-success' : ''}`}
             style={{flex: 1}}
           >
@@ -169,7 +175,9 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
               required
             >
               <option value="">選擇分類</option>
-              {categories.map(category => (
+              {categories
+                .filter(category => category.type === type)
+                .map(category => (
                 <optgroup key={category.category_id} label={category.name}>
                   {category.subcategories.map(sub => (
                     <option key={sub.subcategory_id} value={sub.subcategory_id}>

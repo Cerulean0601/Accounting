@@ -2,6 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Category {
   id: string;
@@ -10,6 +29,7 @@ interface Category {
   parent_id?: string;
   children?: Category[];
   color?: string;
+  sort_order?: number;
 }
 
 interface Tag {
@@ -89,21 +109,22 @@ export default function ManagePage() {
         categoriesData.forEach((cat: any) => {
           // 主分類
           flatCategories.push({
-            id: cat.category_id, // 使用真實的 UUID
+            id: cat.category_id,
             name: cat.name,
-            type: 'expense',
+            type: cat.type || 'expense',
             color: cat.color
           });
           
           // 子分類
-          if (cat.subcategories && cat.subcategories.length > 0) {
+          if (cat.subcategories && Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
             cat.subcategories.forEach((sub: any) => {
-              if (sub.subcategory_id) { // 確保有有效的 ID
+              if (sub && sub.subcategory_id && sub.name) {
                 flatCategories.push({
-                  id: sub.subcategory_id, // 使用真實的 UUID
+                  id: sub.subcategory_id,
                   name: sub.name,
-                  type: 'expense',
-                  parent_id: cat.category_id
+                  type: cat.type || 'expense',
+                  parent_id: cat.category_id,
+                  sort_order: sub.sort_order || 999
                 });
               }
             });
@@ -167,7 +188,8 @@ export default function ManagePage() {
             },
             body: JSON.stringify({
               name: categoryForm.name,
-              color: '#ff6b6b' // 預設顏色
+              color: '#ff6b6b',
+              type: categoryForm.type
             })
           });
 
@@ -324,7 +346,119 @@ export default function ManagePage() {
   };
 
   const mainCategories = categories.filter(cat => !cat.parent_id);
-  const getSubCategories = (parentId: string) => categories.filter(cat => cat.parent_id === parentId);
+  const getSubCategories = (parentId: string) => 
+    categories.filter(cat => cat.parent_id === parentId)
+      .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 拖曳排序處理
+  const handleDragEnd = async (event: DragEndEvent, parentId: string) => {
+    const { active, over } = event;
+    
+    if (active.id !== over?.id) {
+      const subCategories = getSubCategories(parentId);
+      const oldIndex = subCategories.findIndex(item => item.id === active.id);
+      const newIndex = subCategories.findIndex(item => item.id === over?.id);
+      
+      const newOrder = arrayMove(subCategories, oldIndex, newIndex);
+      
+      // 更新本地狀態
+      const updatedCategories = categories.map(cat => {
+        if (cat.parent_id === parentId) {
+          const newIdx = newOrder.findIndex(item => item.id === cat.id);
+          return { ...cat, sort_order: newIdx + 1 };
+        }
+        return cat;
+      });
+      setCategories(updatedCategories);
+      
+      // 發送到後端
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await fetch('/api/subcategories/reorder', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              subcategory_ids: newOrder.map(item => item.id)
+            })
+          });
+        } catch (error) {
+          console.error('排序更新失敗:', error);
+          loadData();
+        }
+      }
+    }
+  };
+
+  // 可拖曳的子分類項目
+  function SortableItem({ subCategory }: { subCategory: Category }) {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id: subCategory.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="nes-container"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '10px',
+          cursor: 'grab',
+          marginTop: '5px',
+          transform: CSS.Transform.toString(transform),
+          transition
+        }}
+      >
+        <span>🔸 {subCategory.name}</span>
+        <div>
+          <button
+            className="nes-btn is-warning"
+            style={{marginRight: '5px'}}
+            onClick={() => {
+              setCategoryForm({
+                name: subCategory.name,
+                type: subCategory.type,
+                parent_id: subCategory.parent_id || ''
+              });
+              setEditingCategory(subCategory.id);
+            }}
+          >
+            編輯
+          </button>
+          <button
+            className="nes-btn is-error"
+            onClick={() => deleteCategory(subCategory.id)}
+          >
+            刪除
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
@@ -363,6 +497,14 @@ export default function ManagePage() {
       </div>
 
       {/* 分類管理 */}
+      {activeTab === 'categories' && (
+        <style jsx global>{`
+          .nes-container:active {
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+          }
+        `}</style>
+      )}
       {activeTab === 'categories' && (
         <div>
           <div className="nes-container">
@@ -440,7 +582,7 @@ export default function ManagePage() {
                   alignItems: 'center'
                 }}>
                   <span>
-                    <i className={`nes-icon ${category.type === 'income' ? 'coin' : 'heart'}`}></i>
+                    <i className={`nes-icon ${category.type === 'income' ? 'like' : 'coin'}`}></i>
                     {category.name}
                   </span>
                   <div>
@@ -467,41 +609,25 @@ export default function ManagePage() {
                   </div>
                 </div>
                 
-                {/* 子分類 */}
-                {getSubCategories(category.id).map(subCategory => (
-                  <div key={subCategory.id} style={{marginLeft: '20px', marginTop: '5px'}}>
-                    <div className="nes-container" style={{
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      padding: '10px'
-                    }}>
-                      <span>└ {subCategory.name}</span>
-                      <div>
-                        <button
-                          className="nes-btn is-warning"
-                          style={{marginRight: '5px'}}
-                          onClick={() => {
-                            setCategoryForm({
-                              name: subCategory.name,
-                              type: subCategory.type,
-                              parent_id: subCategory.parent_id || ''
-                            });
-                            setEditingCategory(subCategory.id);
-                          }}
-                        >
-                          編輯
-                        </button>
-                        <button
-                          className="nes-btn is-error"
-                          onClick={() => deleteCategory(subCategory.id)}
-                        >
-                          刪除
-                        </button>
-                      </div>
-                    </div>
+                {/* 可拖曳的子分類 */}
+                {getSubCategories(category.id).length > 0 && (
+                  <div style={{marginLeft: '20px'}}>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event) => handleDragEnd(event, category.id)}
+                    >
+                      <SortableContext
+                        items={getSubCategories(category.id).map(item => item.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {getSubCategories(category.id).map((subCategory) => (
+                          <SortableItem key={subCategory.id} subCategory={subCategory} />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                   </div>
-                ))}
+                )}
               </div>
             ))}
           </div>
