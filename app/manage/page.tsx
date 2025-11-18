@@ -422,16 +422,6 @@ export default function ManagePage() {
         {...attributes}
         {...listeners}
         className="nes-container"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '10px',
-          cursor: 'grab',
-          marginTop: '5px',
-          transform: CSS.Transform.toString(transform),
-          transition
-        }}
       >
         <span>🔸 {subCategory.name}</span>
         <div>
