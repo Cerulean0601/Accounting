@@ -16,8 +16,6 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -105,7 +103,7 @@ export default function ManagePage() {
       if (categoriesRes.ok) {
         const categoriesData = await categoriesRes.json();
         const flatCategories: Category[] = [];
-        
+
         categoriesData.forEach((cat: any) => {
           // 主分類
           flatCategories.push({
@@ -114,7 +112,7 @@ export default function ManagePage() {
             type: cat.type || 'expense',
             color: cat.color
           });
-          
+
           // 子分類
           if (cat.subcategories && Array.isArray(cat.subcategories) && cat.subcategories.length > 0) {
             cat.subcategories.forEach((sub: any) => {
@@ -130,7 +128,7 @@ export default function ManagePage() {
             });
           }
         });
-        
+
         console.log('載入的分類資料:', flatCategories); // Debug log
         setCategories(flatCategories);
       }
@@ -210,16 +208,16 @@ export default function ManagePage() {
 
   const deleteCategory = async (id: string) => {
     if (!confirm('確定要刪除此分類嗎？')) return;
-    
+
     const token = localStorage.getItem('token');
     if (!token) return;
 
     try {
       const category = categories.find(cat => cat.id === id);
       const isSubcategory = category?.parent_id;
-      
+
       const endpoint = isSubcategory ? `/api/subcategories/${id}` : `/api/categories/${id}`;
-      
+
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -242,8 +240,8 @@ export default function ManagePage() {
   const handleTagSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTag) {
-      setTags(prev => prev.map(tag => 
-        tag.id === editingTag 
+      setTags(prev => prev.map(tag =>
+        tag.id === editingTag
           ? { ...tag, ...tagForm }
           : tag
       ));
@@ -323,7 +321,7 @@ export default function ManagePage() {
 
   const deleteAccount = async (id: string) => {
     if (!confirm('確定要刪除此帳戶嗎？')) return;
-    
+
     const token = localStorage.getItem('token');
     if (!token) return;
 
@@ -346,7 +344,7 @@ export default function ManagePage() {
   };
 
   const mainCategories = categories.filter(cat => !cat.parent_id);
-  const getSubCategories = (parentId: string) => 
+  const getSubCategories = (parentId: string) =>
     categories.filter(cat => cat.parent_id === parentId)
       .sort((a, b) => (a.sort_order || 999) - (b.sort_order || 999));
 
@@ -360,14 +358,14 @@ export default function ManagePage() {
   // 拖曳排序處理
   const handleDragEnd = async (event: DragEndEvent, parentId: string) => {
     const { active, over } = event;
-    
+
     if (active.id !== over?.id) {
       const subCategories = getSubCategories(parentId);
       const oldIndex = subCategories.findIndex(item => item.id === active.id);
       const newIndex = subCategories.findIndex(item => item.id === over?.id);
-      
+
       const newOrder = arrayMove(subCategories, oldIndex, newIndex);
-      
+
       // 更新本地狀態
       const updatedCategories = categories.map(cat => {
         if (cat.parent_id === parentId) {
@@ -377,7 +375,7 @@ export default function ManagePage() {
         return cat;
       });
       setCategories(updatedCategories);
-      
+
       // 發送到後端
       const token = localStorage.getItem('token');
       if (token) {
@@ -427,7 +425,7 @@ export default function ManagePage() {
         <div>
           <button
             className="nes-btn is-warning"
-            style={{marginRight: '5px'}}
+            style={{ marginRight: '5px' }}
             onClick={() => {
               setCategoryForm({
                 name: subCategory.name,
@@ -453,7 +451,7 @@ export default function ManagePage() {
   return (
     <div className="app-container">
       <div className="nes-container">
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p className="title">資料管理</p>
           <button
             className="nes-btn"
@@ -462,9 +460,9 @@ export default function ManagePage() {
             返回主頁
           </button>
         </div>
-        
+
         {/* 標籤頁 */}
-        <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <button
             className={`nes-btn ${activeTab === 'categories' ? 'is-primary' : ''}`}
             onClick={() => setActiveTab('categories')}
@@ -500,39 +498,39 @@ export default function ManagePage() {
           <div className="nes-container">
             <p className="title">{editingCategory ? '編輯' : '新增'}分類</p>
             <form onSubmit={handleCategorySubmit}>
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>分類名稱</label>
                 <input
                   className="nes-input"
                   value={categoryForm.name}
-                  onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
                   required
                 />
               </div>
-              
-              <div style={{display: 'flex', gap: '10px', marginBottom: '15px'}}>
+
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                 <button
                   type="button"
                   className={`nes-btn ${categoryForm.type === 'expense' ? 'is-error' : ''}`}
-                  onClick={() => setCategoryForm({...categoryForm, type: 'expense'})}
+                  onClick={() => setCategoryForm({ ...categoryForm, type: 'expense' })}
                 >
                   支出
                 </button>
                 <button
                   type="button"
                   className={`nes-btn ${categoryForm.type === 'income' ? 'is-success' : ''}`}
-                  onClick={() => setCategoryForm({...categoryForm, type: 'income'})}
+                  onClick={() => setCategoryForm({ ...categoryForm, type: 'income' })}
                 >
                   收入
                 </button>
               </div>
 
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>主分類</label>
                 <div className="nes-select">
                   <select
                     value={categoryForm.parent_id}
-                    onChange={(e) => setCategoryForm({...categoryForm, parent_id: e.target.value})}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, parent_id: e.target.value })}
                   >
                     <option value="">無（作為主分類）</option>
                     {mainCategories.filter(cat => cat.type === categoryForm.type).map(cat => (
@@ -542,7 +540,7 @@ export default function ManagePage() {
                 </div>
               </div>
 
-              <div style={{display: 'flex', gap: '10px'}}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="nes-btn is-primary">
                   {editingCategory ? '更新' : '新增'}
                 </button>
@@ -565,10 +563,10 @@ export default function ManagePage() {
           <div className="nes-container">
             <p className="title">分類列表</p>
             {mainCategories.map(category => (
-              <div key={category.id} style={{marginBottom: '15px'}}>
+              <div key={category.id} style={{ marginBottom: '15px' }}>
                 <div className="nes-container is-dark" style={{
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
                   <span>
@@ -578,7 +576,7 @@ export default function ManagePage() {
                   <div>
                     <button
                       className="nes-btn is-warning"
-                      style={{marginRight: '5px'}}
+                      style={{ marginRight: '5px' }}
                       onClick={() => {
                         setCategoryForm({
                           name: category.name,
@@ -598,10 +596,10 @@ export default function ManagePage() {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* 可拖曳的子分類 */}
                 {getSubCategories(category.id).length > 0 && (
-                  <div style={{marginLeft: '20px'}}>
+                  <div style={{ marginLeft: '20px' }}>
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
@@ -630,27 +628,27 @@ export default function ManagePage() {
           <div className="nes-container">
             <p className="title">{editingTag ? '編輯' : '新增'}標籤</p>
             <form onSubmit={handleTagSubmit}>
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>標籤名稱</label>
                 <input
                   className="nes-input"
                   value={tagForm.name}
-                  onChange={(e) => setTagForm({...tagForm, name: e.target.value})}
+                  onChange={(e) => setTagForm({ ...tagForm, name: e.target.value })}
                   required
                 />
               </div>
-              
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>顏色</label>
                 <input
                   type="color"
                   className="nes-input"
                   value={tagForm.color}
-                  onChange={(e) => setTagForm({...tagForm, color: e.target.value})}
+                  onChange={(e) => setTagForm({ ...tagForm, color: e.target.value })}
                 />
               </div>
 
-              <div style={{display: 'flex', gap: '10px'}}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="nes-btn is-primary">
                   {editingTag ? '更新' : '新增'}
                 </button>
@@ -672,17 +670,17 @@ export default function ManagePage() {
 
           <div className="nes-container">
             <p className="title">標籤列表</p>
-            <div style={{display: 'grid', gap: '10px'}}>
+            <div style={{ display: 'grid', gap: '10px' }}>
               {tags.map(tag => (
                 <div key={tag.id} className="nes-container is-dark" style={{
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <span style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
-                      width: '20px', 
-                      height: '20px', 
+                      width: '20px',
+                      height: '20px',
                       backgroundColor: tag.color,
                       border: '2px solid #fff'
                     }}></div>
@@ -691,7 +689,7 @@ export default function ManagePage() {
                   <div>
                     <button
                       className="nes-btn is-warning"
-                      style={{marginRight: '5px'}}
+                      style={{ marginRight: '5px' }}
                       onClick={() => {
                         setTagForm({ name: tag.name, color: tag.color });
                         setEditingTag(tag.id);
@@ -719,22 +717,22 @@ export default function ManagePage() {
           <div className="nes-container">
             <p className="title">{editingAccount ? '編輯' : '新增'}帳戶</p>
             <form onSubmit={handleAccountSubmit}>
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>帳戶名稱</label>
                 <input
                   className="nes-input"
                   value={accountForm.name}
-                  onChange={(e) => setAccountForm({...accountForm, name: e.target.value})}
+                  onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
                   required
                 />
               </div>
-              
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>帳戶類型</label>
                 <div className="nes-select">
                   <select
                     value={accountForm.type}
-                    onChange={(e) => setAccountForm({...accountForm, type: e.target.value as any})}
+                    onChange={(e) => setAccountForm({ ...accountForm, type: e.target.value as any })}
                   >
                     <option value="cash">現金</option>
                     <option value="bank">銀行</option>
@@ -743,18 +741,18 @@ export default function ManagePage() {
                 </div>
               </div>
 
-              <div className="nes-field" style={{marginBottom: '15px'}}>
+              <div className="nes-field" style={{ marginBottom: '15px' }}>
                 <label>初始金額</label>
                 <input
                   type="number"
                   className="nes-input"
                   value={accountForm.initial_balance}
-                  onChange={(e) => setAccountForm({...accountForm, initial_balance: parseFloat(e.target.value)})}
+                  onChange={(e) => setAccountForm({ ...accountForm, initial_balance: parseFloat(e.target.value) })}
                   step="0.01"
                 />
               </div>
 
-              <div style={{display: 'flex', gap: '10px'}}>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="nes-btn is-primary">
                   {editingAccount ? '更新' : '新增'}
                 </button>
@@ -776,22 +774,21 @@ export default function ManagePage() {
 
           <div className="nes-container">
             <p className="title">帳戶列表</p>
-            <div style={{display: 'grid', gap: '10px'}}>
+            <div style={{ display: 'grid', gap: '10px' }}>
               {accounts.map(account => (
                 <div key={account.id} className="nes-container is-dark" style={{
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
                   <span>
-                    <i className={`nes-icon ${
-                      account.type === 'cash' ? 'coin' : 
-                      account.type === 'bank' ? 'trophy' : 'heart'
-                    }`}></i>
+                    <i className={`nes-icon ${account.type === 'cash' ? 'coin' :
+                        account.type === 'bank' ? 'trophy' : 'heart'
+                      }`}></i>
                     {account.name} ({account.type})
                   </span>
-                  <div style={{textAlign: 'right'}}>
-                    <div style={{fontSize: '12px', color: '#999'}}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '12px', color: '#999' }}>
                       初始: ${account.initial_balance.toLocaleString()}
                     </div>
                     <div>
@@ -801,7 +798,7 @@ export default function ManagePage() {
                   <div>
                     <button
                       className="nes-btn is-warning"
-                      style={{marginRight: '5px'}}
+                      style={{ marginRight: '5px' }}
                       onClick={() => {
                         setAccountForm({
                           name: account.name,
