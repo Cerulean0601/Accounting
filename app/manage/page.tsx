@@ -19,6 +19,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { fetchWithAuth } from '@/lib/api-client';
 
 interface Category {
   id: string;
@@ -82,9 +83,7 @@ export default function ManagePage() {
 
     try {
       // 載入真實帳戶資料
-      const accountsRes = await fetch('/api/accounts', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const accountsRes = await fetchWithAuth('/api/accounts');
       if (accountsRes.ok) {
         const accountsData = await accountsRes.json();
         setAccounts(accountsData.map((acc: any) => ({
@@ -97,9 +96,7 @@ export default function ManagePage() {
       }
 
       // 載入真實分類資料
-      const categoriesRes = await fetch('/api/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const categoriesRes = await fetchWithAuth('/api/categories');
       if (categoriesRes.ok) {
         const categoriesData = await categoriesRes.json();
         const flatCategories: Category[] = [];
@@ -147,8 +144,6 @@ export default function ManagePage() {
   // 分類 CRUD
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     try {
       if (editingCategory) {
@@ -157,12 +152,8 @@ export default function ManagePage() {
       } else {
         if (categoryForm.parent_id) {
           // 新增子分類
-          const response = await fetch('/api/subcategories', {
+          const response = await fetchWithAuth('/api/subcategories', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
             body: JSON.stringify({
               category_id: categoryForm.parent_id,
               name: categoryForm.name
@@ -178,12 +169,8 @@ export default function ManagePage() {
           }
         } else {
           // 新增主分類
-          const response = await fetch('/api/categories', {
+          const response = await fetchWithAuth('/api/categories', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
             body: JSON.stringify({
               name: categoryForm.name,
               color: '#ff6b6b',
@@ -209,18 +196,14 @@ export default function ManagePage() {
   const deleteCategory = async (id: string) => {
     if (!confirm('確定要刪除此分類嗎？')) return;
 
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     try {
       const category = categories.find(cat => cat.id === id);
       const isSubcategory = category?.parent_id;
 
       const endpoint = isSubcategory ? `/api/subcategories/${id}` : `/api/categories/${id}`;
 
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetchWithAuth(endpoint, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -263,18 +246,12 @@ export default function ManagePage() {
   // 帳戶 CRUD
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) return;
 
     try {
       if (editingAccount) {
         // 更新帳戶 (需要新增 PUT API)
-        const response = await fetch(`/api/accounts/${editingAccount}`, {
+        const response = await fetchWithAuth(`/api/accounts/${editingAccount}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
           body: JSON.stringify({
             name: accountForm.name,
             type: accountForm.type,
@@ -292,12 +269,8 @@ export default function ManagePage() {
         }
       } else {
         // 新增帳戶
-        const response = await fetch('/api/accounts', {
+        const response = await fetchWithAuth('/api/accounts', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
           body: JSON.stringify({
             name: accountForm.name,
             type: accountForm.type,
@@ -322,13 +295,9 @@ export default function ManagePage() {
   const deleteAccount = async (id: string) => {
     if (!confirm('確定要刪除此帳戶嗎？')) return;
 
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     try {
-      const response = await fetch(`/api/accounts/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetchWithAuth(`/api/accounts/${id}`, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -380,12 +349,8 @@ export default function ManagePage() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await fetch('/api/subcategories/reorder', {
+          await fetchWithAuth('/api/subcategories/reorder', {
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
             body: JSON.stringify({
               subcategory_ids: newOrder.map(item => item.id)
             })

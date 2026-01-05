@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     const result = await db.query`
       SELECT t.transaction_id, t.amount, t.note, t.date, 
              a.name as account_name, a.account_id,
-             c.name as category_name, c.type, s.name as subcategory_name
+             c.name as category_name, c.type, 
+             s.name as subcategory_name, s.subcategory_id
       FROM transactions t
       JOIN accounts a ON t.account_id = a.account_id
       LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id

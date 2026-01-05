@@ -27,20 +27,29 @@ interface Category {
 interface QuickEntryProps {
   accounts: Account[];
   onSubmit: (transaction: any) => void;
+  initialData?: {
+    transaction_id?: string;
+    account_id?: string;
+    subcategory_id?: string;
+    amount?: number;
+    note?: string;
+    date?: string;
+    type?: 'income' | 'expense';
+  };
 }
 
-export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
-  const [amount, setAmount] = useState('');
-  const [accountId, setAccountId] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [subcategoryId, setSubcategoryId] = useState('');
+export default function QuickEntry({ accounts, onSubmit, initialData }: QuickEntryProps) {
+  const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
+  const [accountId, setAccountId] = useState(initialData?.account_id || '');
+  const [type, setType] = useState<'income' | 'expense'>(initialData?.type || 'expense');
+  const [subcategoryId, setSubcategoryId] = useState(initialData?.subcategory_id || '');
   const [categories, setCategories] = useState<Category[]>([]);
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState(() => {
+  const [note, setNote] = useState(initialData?.note || '');
+  const [date, setDate] = useState(initialData?.date || (() => {
     // 預設為當日日期，格式為 YYYY-MM-DD
     const today = new Date();
     return today.toISOString().split('T')[0];
-  });
+  }));
 
   useEffect(() => {
     if (accounts.length > 0 && !accountId) {
@@ -52,6 +61,47 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  // 當 initialData 改變時，同步更新所有狀態（編輯模式）
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.amount !== undefined) {
+        setAmount(initialData.amount.toString());
+      }
+      if (initialData.account_id) {
+        setAccountId(initialData.account_id);
+      }
+      if (initialData.subcategory_id) {
+        setSubcategoryId(initialData.subcategory_id);
+      }
+      if (initialData.note !== undefined) {
+        setNote(initialData.note);
+      }
+      if (initialData.type) {
+        setType(initialData.type);
+      }
+      if (initialData.date) {
+        // 確保日期格式為 YYYY-MM-DD（date input 需要的格式）
+        const dateStr = initialData.date.split('T')[0];
+        setDate(dateStr);
+      }
+    }
+  }, [initialData]);
+
+  // 當分類載入完成且處於編輯模式時，根據 subcategory 自動設定 type
+  useEffect(() => {
+    if (initialData?.subcategory_id && categories.length > 0 && !initialData?.type) {
+      for (const category of categories) {
+        const subcategory = category.subcategories.find(
+          sub => sub.subcategory_id === initialData.subcategory_id
+        );
+        if (subcategory) {
+          setType(category.type as 'income' | 'expense');
+          break;
+        }
+      }
+    }
+  }, [categories, initialData]);
 
   const loadCategories = async () => {
     const token = localStorage.getItem('token');
@@ -73,6 +123,7 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
     if (!amount || !accountId || !subcategoryId || !date) return;
 
     onSubmit({
+      transaction_id: initialData?.transaction_id,
       account_id: accountId,
       subcategory_id: subcategoryId,
       amount: parseFloat(amount),
@@ -80,10 +131,13 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
       date
     });
 
-    setAmount('');
-    setSubcategoryId('');
-    setNote('');
-    // 保持日期不重置，方便連續記帳
+    // 如果是編輯模式，不清空表單
+    if (!initialData?.transaction_id) {
+      setAmount('');
+      setSubcategoryId('');
+      setNote('');
+      // 保持日期不重置，方便連續記帳
+    }
   };
 
   return (
@@ -204,7 +258,7 @@ export default function QuickEntry({ accounts, onSubmit }: QuickEntryProps) {
         </div>
 
         <button type="submit" className="nes-btn is-primary" style={{width: '100%'}}>
-          記帳
+          {initialData?.transaction_id ? '更新' : '記帳'}
         </button>
       </form>
     </div>

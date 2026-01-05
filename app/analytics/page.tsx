@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Analytics from '@/components/Analytics';
 import { useTheme } from '@/components/ThemeProvider';
+import { fetchWithAuth } from '@/lib/api-client';
 
 export default function AnalyticsPage() {
   const { theme } = useTheme();
@@ -21,9 +22,7 @@ export default function AnalyticsPage() {
     if (!token) return;
 
     try {
-      const summaryRes = await fetch('/api/analytics/summary', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const summaryRes = await fetchWithAuth('/api/analytics/summary');
       if (summaryRes.ok) {
         const summaryData = await summaryRes.json();
         setSummary(summaryData || {});
