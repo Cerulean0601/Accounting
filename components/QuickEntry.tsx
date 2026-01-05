@@ -122,11 +122,17 @@ export default function QuickEntry({ accounts, onSubmit, initialData }: QuickEnt
     e.preventDefault();
     if (!amount || !accountId || !subcategoryId || !date) return;
 
+    const amountValue = parseFloat(amount);
+    if (amountValue <= 0) {
+      alert('金額必須大於 0');
+      return;
+    }
+
     onSubmit({
       transaction_id: initialData?.transaction_id,
       account_id: accountId,
       subcategory_id: subcategoryId,
-      amount: parseFloat(amount),
+      amount: amountValue,
       note,
       date
     });
@@ -193,8 +199,21 @@ export default function QuickEntry({ accounts, onSubmit, initialData }: QuickEnt
             className="nes-input"
             placeholder="輸入金額"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              // 允許空字串和正常輸入
+              setAmount(value);
+            }}
+            onBlur={(e) => {
+              // 當失去焦點時，如果金額小於等於 0，清空並提示
+              const value = parseFloat(e.target.value);
+              if (!isNaN(value) && value <= 0 && e.target.value !== '') {
+                alert('金額必須大於 0');
+                setAmount('');
+              }
+            }}
             step="0.01"
+            min="0.01"
             required
           />
         </div>
