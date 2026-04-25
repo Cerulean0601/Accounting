@@ -2,3 +2,8 @@ node_modules
 .next/
 .vercel
 .idea
+.cursor/
+
+# Serwist
+public/sw*
+public/swe-worker*
