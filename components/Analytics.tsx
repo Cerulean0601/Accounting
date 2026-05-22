@@ -80,7 +80,7 @@ export default function Analytics({ summary }: AnalyticsProps) {
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
             >
-              {[2023, 2024, 2025].map(year => (
+              {Array.from({length: new Date().getFullYear() - 2023 + 1}, (_, i) => 2023 + i).map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
