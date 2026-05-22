@@ -1,6 +1,7 @@
 import 'nes.css/css/nes.min.css'
 import './globals.css'
 import ThemeProvider from '../components/ThemeProvider'
+import AuthProvider from '../components/AuthProvider'
 import localFont from 'next/font/local'
 import { Metadata, Viewport } from 'next'
 
@@ -55,7 +56,9 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className={fusionPixel.variable}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

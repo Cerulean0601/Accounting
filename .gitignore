@@ -6,4 +6,4 @@ node_modules
 
 # Serwist
 public/sw*
-public/swe-worker*
+public/swe-worker*.env.local

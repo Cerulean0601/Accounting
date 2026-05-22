@@ -104,11 +104,8 @@ export default function QuickEntry({ accounts, onSubmit, initialData }: QuickEnt
   }, [categories, initialData]);
 
   const loadCategories = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const response = await fetch('/api/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fetch('/api/categories');
       if (response.ok) {
         const data = await response.json();
         setCategories(data);

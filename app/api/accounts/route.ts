@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const context = logger.getRequestContext(request);
-  const user = auth.getUserFromRequest(request);
+  const user = await auth.getUser();
   
   if (!user) {
     logger.warn('未授權訪問', { ...context, userId: 'unknown' });
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const context = logger.getRequestContext(request);
-  const user = auth.getUserFromRequest(request);
+  const user = await auth.getUser();
   
   if (!user) {
     logger.warn('未授權訪問', { ...context, userId: 'unknown' });

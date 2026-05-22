@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
 export async function PUT(request: NextRequest) {
-  const user = auth.getUserFromRequest(request);
+  const user = await auth.getUser();
   
   if (!user) {
     return NextResponse.json({ error: '未授權' }, { status: 401 });

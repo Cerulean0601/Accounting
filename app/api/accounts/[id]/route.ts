@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const context = logger.getRequestContext(request, { accountId: id });
-  const user = auth.getUserFromRequest(request);
+  const user = await auth.getUser();
   
   if (!user) {
     logger.warn('未授權訪問', { ...context, userId: 'unknown' });
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const context = logger.getRequestContext(request, { accountId: id });
-  const user = auth.getUserFromRequest(request);
+  const user = await auth.getUser();
   
   if (!user) {
     logger.warn('未授權訪問', { ...context, userId: 'unknown' });

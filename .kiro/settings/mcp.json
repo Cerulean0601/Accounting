@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "agend-記帳-路卡利歐-t1514": {
+      "command": "/home/xiaoheji/.agend/instances/記帳-路卡利歐-t1514/mcp-wrapper-agend.sh",
+      "args": []
+    }
+  }
+}

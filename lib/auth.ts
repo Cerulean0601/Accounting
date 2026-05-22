@@ -1,27 +1,11 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { NextRequest } from 'next/server';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 
 export const auth = {
-  hashPassword: (password: string) => bcrypt.hash(password, 12),
-  
-  verifyPassword: (password: string, hash: string) => bcrypt.compare(password, hash),
-  
-  generateToken: (userId: string) => jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' }),
-  
-  verifyToken: (token: string) => {
-    try {
-      return jwt.verify(token, JWT_SECRET) as { userId: string };
-    } catch {
-      return null;
-    }
+  /** 從 NextAuth session 取得用戶 */
+  getUser: async (): Promise<{ userId: string } | null> => {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return null;
+    return { userId: (session.user as any).userId };
   },
-  
-  getUserFromRequest: (request: NextRequest) => {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) return null;
-    return auth.verifyToken(token);
-  }
 };
