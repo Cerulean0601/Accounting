@@ -8,14 +8,27 @@
   font-style: normal;
 }
 
+/* CSS Variables - defaults (overridden by ThemeProvider JS) */
+:root {
+  --color-bg: #f0ebe3;
+  --color-text: #2d2418;
+  --color-primary: #e6a756;
+  --color-income: #7ec88b;
+  --color-expense: #e8756d;
+  --color-card-bg: #ffffff;
+  --color-border: #3d2e1a;
+  --color-muted: #8c7a66;
+}
+
 /* 修正 NES.CSS is-dark 按鈕樣式 */
 .nes-btn.is-dark {
-  background-color: #212529 !important;
-  color: #ffffff !important;
-  border-color: #212529 !important;
+  background-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
 }
 
 /* 自訂主題類別 */
+.nes-btn.is-primary { background-color: var(--color-primary); color: white; }
 .nes-btn.is-purple { background-color: #9c27b0; color: white; }
 .nes-btn.is-teal { background-color: #009688; color: white; }
 .nes-btn.is-orange { background-color: #ff9800; color: white; }
@@ -30,15 +43,10 @@ body, code, html, kbd, pre, samp {
 
 body {
   font-family: var(--font-fusion-pixel), 'Press Start 2P', cursive;
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   padding: 20px;
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-[data-theme="dark"] body {
-  background-color: #212529;
-  color: #ffffff;
 }
 
 .app-container {
@@ -54,34 +62,62 @@ body {
 }
 
 .chart-container {
-  background: #ffffff;
-  color: #212529;
+  background: var(--color-card-bg);
+  color: var(--color-text);
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-[data-theme="dark"] .nes-container {
-  background-color: #343a40 !important;
-  color: #ffffff !important;
+.nes-container {
+  background-color: var(--color-card-bg) !important;
+  color: var(--color-text) !important;
 }
 
-[data-theme="dark"] .nes-table {
-  background-color: #343a40 !important;
-  color: #ffffff !important;
+.nes-table {
+  background-color: var(--color-card-bg) !important;
+  color: var(--color-text) !important;
 }
 
-[data-theme="dark"] .nes-table th,
-[data-theme="dark"] .nes-table td {
-  background-color: #343a40 !important;
-  color: #ffffff !important;
-  border-color: #6c757d !important;
+.nes-table th,
+.nes-table td {
+  background-color: var(--color-card-bg) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
 }
 
-[data-theme="dark"] .chart-container {
-  background: #343a40;
-  color: #ffffff;
+/* Palette selector */
+.palette-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.palette-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 3px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.palette-option.active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.palette-swatch {
+  display: flex;
+  gap: 2px;
+}
+
+.palette-swatch span {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(0,0,0,0.2);
 }
 
 @media (max-width: 768px) {

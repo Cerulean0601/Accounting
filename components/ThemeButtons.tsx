@@ -3,7 +3,7 @@
 import { useTheme } from './ThemeProvider'
 
 export default function ThemeButtons() {
-  const { theme, toggleTheme, setLightTheme, setDarkTheme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <div style={{ 
@@ -21,27 +21,11 @@ export default function ThemeButtons() {
     >
       <button 
         className="nes-btn" 
-        onClick={setLightTheme}
-        style={{ fontSize: '12px', padding: '4px 8px', minHeight: 'auto' }}
-        title="亮色主題"
-      >
-        ☀️
-      </button>
-      <button 
-        className="nes-btn is-dark" 
-        onClick={setDarkTheme}
-        style={{ fontSize: '12px', padding: '4px 8px', minHeight: 'auto' }}
-        title="暗色主題"
-      >
-        🌙
-      </button>
-      <button 
-        className="nes-btn" 
         onClick={toggleTheme}
         style={{ fontSize: '12px', padding: '4px 8px', minHeight: 'auto' }}
-        title="切換主題"
+        title={theme === 'dark' ? '切換亮色' : '切換暗色'}
       >
-        🔄
+        {theme === 'dark' ? '☀️' : '🌙'}
       </button>
     </div>
   )

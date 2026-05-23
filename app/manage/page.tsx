@@ -7,9 +7,13 @@ import TagManager from './TagManager';
 import AccountManager from './AccountManager';
 import { Category, Tag, Account } from './types';
 
+import PaletteSelector from '@/components/PaletteSelector';
+import { useTheme } from '@/components/ThemeProvider';
+
 export default function ManagePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'categories' | 'tags' | 'accounts'>('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'tags' | 'accounts' | 'appearance'>('categories');
+  const { theme, toggleTheme } = useTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -70,12 +74,25 @@ export default function ManagePage() {
           <button className={`nes-btn ${activeTab === 'categories' ? 'is-primary' : ''}`} onClick={() => setActiveTab('categories')}>分類管理</button>
           <button className={`nes-btn ${activeTab === 'tags' ? 'is-primary' : ''}`} onClick={() => setActiveTab('tags')}>標籤管理</button>
           <button className={`nes-btn ${activeTab === 'accounts' ? 'is-primary' : ''}`} onClick={() => setActiveTab('accounts')}>帳戶管理</button>
+          <button className={`nes-btn ${activeTab === 'appearance' ? 'is-primary' : ''}`} onClick={() => setActiveTab('appearance')}>外觀</button>
         </div>
       </div>
 
       {activeTab === 'categories' && <CategoryManager categories={categories} setCategories={setCategories} onReload={loadData} />}
       {activeTab === 'tags' && <TagManager tags={tags} setTags={setTags} />}
       {activeTab === 'accounts' && <AccountManager accounts={accounts} onReload={loadData} />}
+      {activeTab === 'appearance' && (
+        <div className="nes-container" style={{ marginTop: '20px' }}>
+          <p className="title">主題配色</p>
+          <div style={{ marginBottom: '20px' }}>
+            <button className="nes-btn" onClick={toggleTheme}>
+              {theme === 'dark' ? '☀️ 切換亮色' : '🌙 切換暗色'}
+            </button>
+          </div>
+          <p style={{ marginBottom: '10px' }}>選擇風格：</p>
+          <PaletteSelector />
+        </div>
+      )}
     </div>
   );
 }

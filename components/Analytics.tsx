@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import { useTheme } from './ThemeProvider';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -13,18 +14,14 @@ interface AnalyticsProps {
 export default function Analytics({ summary }: AnalyticsProps) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-
-  const nesColors = [
-    '#ff6b6b', '#51cf66', '#339af0', '#ffd43b', 
-    '#ff8cc8', '#74c0fc', '#ffa8a8', '#d0bfff'
-  ];
+  const { colors } = useTheme();
 
   const pieData = {
     labels: summary.categories?.map((cat: any) => cat.category) || [],
     datasets: [{
       data: summary.categories?.map((cat: any) => cat.amount) || [],
-      backgroundColor: nesColors,
-      borderColor: '#212529',
+      backgroundColor: colors.chart,
+      borderColor: 'var(--color-border)',
       borderWidth: 3
     }]
   };
@@ -34,8 +31,8 @@ export default function Analytics({ summary }: AnalyticsProps) {
     datasets: [{
       label: '支出金額',
       data: summary.categories?.map((cat: any) => cat.amount) || [],
-      backgroundColor: '#51cf66',
-      borderColor: '#212529',
+      backgroundColor: colors.chart,
+      borderColor: 'var(--color-border)',
       borderWidth: 3
     }]
   };
@@ -46,10 +43,10 @@ export default function Analytics({ summary }: AnalyticsProps) {
       legend: {
         labels: {
           font: {
-            family: 'Press Start 2P',
-            size: 8
+            family: 'Fusion Pixel, Press Start 2P',
+            size: 10
           },
-          color: '#fff'
+          color: 'var(--color-text)'
         }
       }
     }
@@ -106,22 +103,22 @@ export default function Analytics({ summary }: AnalyticsProps) {
 
       {/* 統計卡片 */}
       <div className="stats-grid">
-        <div className="nes-container is-dark">
+        <div className="nes-container">
           <p>本月支出</p>
-          <p style={{color: '#ff6b6b', fontSize: '20px', marginTop: '10px'}}>
+          <p style={{color: 'var(--color-expense)', fontSize: '20px', marginTop: '10px'}}>
             ${summary.total_expense?.toLocaleString() || 0}
           </p>
         </div>
-        <div className="nes-container is-dark">
+        <div className="nes-container">
           <p>本月收入</p>
-          <p style={{color: '#51cf66', fontSize: '20px', marginTop: '10px'}}>
+          <p style={{color: 'var(--color-income)', fontSize: '20px', marginTop: '10px'}}>
             ${summary.total_income?.toLocaleString() || 0}
           </p>
         </div>
-        <div className="nes-container is-dark">
+        <div className="nes-container">
           <p>淨收入</p>
           <p style={{
-            color: summary.net_income >= 0 ? '#51cf66' : '#ff6b6b', 
+            color: summary.net_income >= 0 ? 'var(--color-income)' : 'var(--color-expense)', 
             fontSize: '20px', 
             marginTop: '10px'
           }}>
@@ -133,14 +130,14 @@ export default function Analytics({ summary }: AnalyticsProps) {
       {/* 圖表 */}
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px'}}>
         <div className="chart-container">
-          <h3 style={{marginBottom: '20px', color: '#212529'}}>支出分類比例</h3>
+          <h3 style={{marginBottom: '20px'}}>支出分類比例</h3>
           <div style={{height: '300px'}}>
             <Pie data={pieData} options={chartOptions} />
           </div>
         </div>
 
         <div className="chart-container">
-          <h3 style={{marginBottom: '20px', color: '#212529'}}>分類支出金額</h3>
+          <h3 style={{marginBottom: '20px'}}>分類支出金額</h3>
           <div style={{height: '300px'}}>
             <Bar data={barData} options={chartOptions} />
           </div>
@@ -152,13 +149,13 @@ export default function Analytics({ summary }: AnalyticsProps) {
         <p className="title">帳戶餘額</p>
         <div style={{display: 'grid', gap: '10px'}}>
           {summary.accounts?.map((account: any) => (
-            <div key={account.name} className="nes-container is-dark" style={{
+            <div key={account.name} className="nes-container" style={{
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center'
             }}>
               <span>{account.name}</span>
-              <span style={{color: account.balance >= 0 ? '#51cf66' : '#ff6b6b'}}>
+              <span style={{color: account.balance >= 0 ? 'var(--color-income)' : 'var(--color-expense)'}}>
                 ${account.balance.toLocaleString()}
               </span>
             </div>
