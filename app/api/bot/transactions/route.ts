@@ -3,7 +3,10 @@ import { db } from '@/lib/db';
 import { verifyBotAuth } from '@/lib/bot-auth';
 
 /**
- * GET /api/bot/transactions — 查詢分類與帳戶列表
+ * GET /api/bot/transactions — 列出交易明細（含分頁篩選）或查詢分類帳戶
+ *   ?list=true — 列出交易明細
+ *   ?list=true&page=1&limit=30&startDate=...&endDate=...&type=expense
+ *   不帶 list — 回傳分類與帳戶列表（向後相容）
  * POST /api/bot/transactions — 新增交易
  */
 
@@ -11,30 +14,81 @@ export async function GET(request: NextRequest) {
   const auth = verifyBotAuth(request);
   if (!auth.success) return auth.response;
 
-  try {
-    const categories = await db.query`
-      SELECT c.category_id, c.name as category_name, c.type,
-             s.subcategory_id, s.name as subcategory_name
-      FROM categories c
-      LEFT JOIN subcategories s ON c.category_id = s.category_id
-      WHERE c.user_id = ${auth.userId}
-      ORDER BY c.type, c.name, s.sort_order
-    `;
+  const { searchParams } = new URL(request.url);
+  const isList = searchParams.get('list') === 'true';
 
-    const accounts = await db.query`
-      SELECT account_id, name, type, current_balance, is_default
-      FROM accounts
-      WHERE user_id = ${auth.userId}
-      ORDER BY is_default DESC, name
+  if (!isList) {
+    // 回傳分類與帳戶列表
+    try {
+      const categories = await db.query`
+        SELECT c.category_id, c.name as category_name, c.type,
+               s.subcategory_id, s.name as subcategory_name
+        FROM categories c
+        LEFT JOIN subcategories s ON c.category_id = s.category_id
+        WHERE c.user_id = ${auth.userId}
+        ORDER BY c.type, c.name, s.sort_order
+      `;
+
+      const accounts = await db.query`
+        SELECT account_id, name, type, current_balance, is_default
+        FROM accounts
+        WHERE user_id = ${auth.userId}
+        ORDER BY is_default DESC, name
+      `;
+
+      return NextResponse.json({
+        categories: categories.rows,
+        accounts: accounts.rows,
+      });
+    } catch (error) {
+      console.error('Bot GET /transactions 錯誤:', error);
+      return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 });
+    }
+  }
+
+  // 列出交易明細
+  try {
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '30', 10);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const type = searchParams.get('type');
+    const offset = (page - 1) * limit;
+
+    // 計算總筆數
+    const countResult = await db.query`
+      SELECT COUNT(*) as total
+      FROM transactions t
+      JOIN accounts a ON t.account_id = a.account_id
+      LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE t.user_id = ${auth.userId}
+    `;
+    const total = parseInt(countResult.rows[0].total, 10);
+    const totalPages = Math.ceil(total / limit);
+
+    // 查詢交易
+    const result = await db.query`
+      SELECT t.transaction_id, t.amount, t.note, t.date,
+             a.name as account_name, a.account_id,
+             c.name as category_name, c.type,
+             s.name as subcategory_name, s.subcategory_id
+      FROM transactions t
+      JOIN accounts a ON t.account_id = a.account_id
+      LEFT JOIN subcategories s ON t.subcategory_id = s.subcategory_id
+      LEFT JOIN categories c ON s.category_id = c.category_id
+      WHERE t.user_id = ${auth.userId}
+      ORDER BY t.date DESC, t.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     return NextResponse.json({
-      categories: categories.rows,
-      accounts: accounts.rows,
+      data: result.rows,
+      pagination: { page, limit, total, totalPages },
     });
   } catch (error) {
-    console.error('Bot GET /transactions 錯誤:', error);
-    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 });
+    console.error('Bot GET /transactions list 錯誤:', error);
+    return NextResponse.json({ error: '取得交易失敗' }, { status: 500 });
   }
 }
 
