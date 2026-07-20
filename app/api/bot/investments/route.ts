@@ -27,13 +27,69 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await db.query`
-      SELECT id, symbol, name, type, shares, avg_cost, currency, buy_rate, inserted_at, updated_at
-      FROM investments
-      WHERE user_id = ${auth.userId}
-      ORDER BY type, symbol
+      SELECT i.id, i.symbol, i.name, i.type, i.shares, i.avg_cost, i.currency, i.buy_rate, i.inserted_at, i.updated_at,
+             p.close_price, p.exchange_rate as current_rate, p.date as price_date
+      FROM investments i
+      LEFT JOIN LATERAL (
+        SELECT close_price, exchange_rate, date
+        FROM price_cache
+        WHERE symbol = i.symbol
+        ORDER BY date DESC
+        LIMIT 1
+      ) p ON true
+      WHERE i.user_id = ${auth.userId}
+      ORDER BY i.type, i.symbol
     `;
 
-    return NextResponse.json(result.rows);
+    // 計算損益
+    const investments = result.rows.map((row: any) => {
+      const shares = parseFloat(row.shares);
+      const avgCost = parseFloat(row.avg_cost);
+      const buyRate = parseFloat(row.buy_rate);
+      const currentPrice = row.close_price ? parseFloat(row.close_price) : null;
+      const currentRate = row.current_rate ? parseFloat(row.current_rate) : buyRate;
+
+      const costTwd = shares * avgCost * buyRate;
+      const marketValueTwd = currentPrice ? shares * currentPrice * currentRate : null;
+      const pnl = marketValueTwd ? marketValueTwd - costTwd : null;
+      const pnlPercent = pnl !== null && costTwd > 0 ? (pnl / costTwd) * 100 : null;
+
+      return {
+        id: row.id,
+        symbol: row.symbol,
+        name: row.name,
+        type: row.type,
+        shares: shares,
+        avg_cost: avgCost,
+        currency: row.currency,
+        buy_rate: buyRate,
+        current_price: currentPrice,
+        current_rate: currentRate,
+        price_date: row.price_date,
+        cost_twd: Math.round(costTwd),
+        market_value_twd: marketValueTwd ? Math.round(marketValueTwd) : null,
+        pnl: pnl ? Math.round(pnl) : null,
+        pnl_percent: pnlPercent ? Math.round(pnlPercent * 100) / 100 : null,
+        inserted_at: row.inserted_at,
+        updated_at: row.updated_at,
+      };
+    });
+
+    // 總計
+    const totalCost = investments.reduce((sum: number, i: any) => sum + i.cost_twd, 0);
+    const totalMarketValue = investments.reduce((sum: number, i: any) => sum + (i.market_value_twd || i.cost_twd), 0);
+    const totalPnl = totalMarketValue - totalCost;
+    const totalPnlPercent = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+
+    return NextResponse.json({
+      investments,
+      summary: {
+        total_cost_twd: totalCost,
+        total_market_value_twd: totalMarketValue,
+        total_pnl: totalPnl,
+        total_pnl_percent: Math.round(totalPnlPercent * 100) / 100,
+      },
+    });
   } catch (error: any) {
     // 資料表不存在時自動建立
     if (error?.code === '42P01') {
@@ -55,7 +111,7 @@ export async function GET(request: NextRequest) {
       await db.query`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_investments_user_symbol ON investments(user_id, symbol)
       `;
-      return NextResponse.json([]);
+      return NextResponse.json({ investments: [], summary: { total_cost_twd: 0, total_market_value_twd: 0, total_pnl: 0, total_pnl_percent: 0 } });
     }
     console.error('Bot GET /investments 錯誤:', error);
     return NextResponse.json({ error: '取得投資持倉失敗' }, { status: 500 });
